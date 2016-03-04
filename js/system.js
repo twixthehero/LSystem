@@ -1,6 +1,5 @@
 (function()
 {
-    "use strict";
     //F -> F[+F]F[-F]F
     var Vec2 = Victor;
 
@@ -22,7 +21,8 @@
         ctx = canvas.getContext("2d");
         ctx.font = "12pt Arial";
 
-        tuitle = Turtle(ctx, canvas.width / 2, canvas.height);
+        tuitle = new Turtle(ctx, canvas.width / 2, canvas.height);
+        tuitle.rotate(-90, false);
 
         createUI();
 
@@ -75,29 +75,31 @@
 
         ctx.fillText(text, 5, i * 25 + 25);
 
+        tuitle.penDown();
         for (i = 0; i < text.length; i++)
         {
             if (text[i] == 'F')
             {
-
+                tuitle.move(2);
             }
             else if (text[i] == '+')
             {
-
+                tuitle.rotate(-25.7, false);
             }
             else if (text[i] == '-')
             {
-
+                tuitle.rotate(25.7, false);
             }
             else if (text[i] == '[')
             {
-
+                tuitle.push();
             }
             else if (text[i] == ']')
             {
-
+                tuitle.pop();
             }
         }
+        tuitle.penUp();
     }
 
     function calcCycles()
@@ -128,69 +130,69 @@
 
     var Turtle = function(canvas, startX, startY)
     {
-        Object.assign(this,
+        this.canvas = canvas;
+        this.weight = 1;
+        this.color = 'red';
+        this.pos = Vec2(startX, startY);
+        this.dir = Vec2(1, 0);
+        this.pen = 1;
+        this.posArray = [];
+        this.dirArray = [];
+
+        this.penUp = function()
         {
-            canvas: null,
-            weight: 1,
-            color: 'red',
-            pos: Vec2(startX, startY),
-            dir: Vec2(1, 0),
-            pen: 1,
-            posArray: [],
-            dirArray: [],
+            this.pen = 0;
+        };
 
-            penUp: function()
+        this.penDown = function()
+        {
+            this.pen = 1;
+        };
+
+        this.push = function()
+        {
+            this.posArray.push(this.pos.clone());
+            this.dirArray.push(this.dir.clone());
+        };
+
+        this.pop = function()
+        {
+            this.pos = this.posArray.pop();
+            this.dir = this.dirArray.pop();
+            this.canvas.moveTo(this.pos.x, this.pos.y);
+        };
+
+        this.rotate = function(amt, isRad)
+        {
+            if (isRad)
+                this.dir.rotate(amt);
+            else
+                this.dir.rotate(amt / 180 * Math.PI);
+        };
+
+        this.move = function(amt)
+        {
+            if (this.pen) this.canvas.beginPath();
+
+            this.canvas.moveTo(this.pos.x, this.pos.y);
+
+            this.pos.x += this.dir.x * amt;
+            this.pos.y += this.dir.y * amt;
+
+            if (this.pen)
             {
-                this.pen = 0
-            },
-
-            penDown: function()
+                this.canvas.lineTo(this.pos.x, this.pos.y);
+                this.canvas.lineWidth = this.weight;
+                this.canvas.strokeStyle = this.color;
+                this.canvas.stroke();
+                this.canvas.closePath();
+            }
+            else
             {
-                this.pen = 1
-            },
+                this.moveTo(this.pos.x, this.pos.y);
+            }
+        };
 
-            push: function()
-            {
-                this.posArray.push(this.pos.clone())
-                this.dirArray.push(this.dir.clone())
-            },
-
-            pop: function()
-            {
-                this.pos = this.posArray.pop()
-                this.dir = this.dirArray.pop()
-                this.canvas.moveTo(this.pos.x, this.pos.y)
-            },
-
-            // THIS IS IN RADIANS!!!
-            rotate: function(amt)
-            {
-                this.dir.rotate(amt)
-            },
-
-            move: function(amt)
-            {
-                if (this.pen) this.canvas.beginPath()
-                this.canvas.moveTo(this.pos.x, this.pos.y)
-
-                this.pos.x += this.dir.x * amt
-                this.pos.y += this.dir.y * amt
-
-                if (this.pen)
-                {
-                    this.canvas.lineTo(this.pos.x, this.pos.y)
-                    this.canvas.lineWidth = this.weight
-                    this.canvas.stroke()
-                    this.canvas.closePath()
-                }
-                else
-                {
-                    this.moveTo(this.pos.x, this.pos.y)
-                }
-            },
-        })
-
-        this.canvas = canvas
-        this.canvas.moveTo(this.pos.x, this.pos.y)
+        this.canvas.moveTo(this.pos.x, this.pos.y);
     };
 })();
